@@ -63,45 +63,7 @@ exports.getAdminDashboard = async (req, res) => {
     }
 };
 
-exports.createRequest = async (req, res) => {
 
-    try {
-
-        const {
-            serviceId,
-            title,
-            description,
-            address,
-            videoUrl,
-            scheduleDate
-        } = req.body;
-
-        const request = new Request({
-            customerId: req.user.id,
-            serviceId,
-            title,
-            description,
-            address,
-            videoUrl,
-            scheduleDate
-        });
-
-        await request.save();
-
-        res.json({
-            message: "Request created successfully",
-            request
-        });
-
-    } catch (err) {
-
-        res.status(500).json({
-            message: err.message
-        });
-
-    }
-
-};
 exports.getMyRequests = async (req, res) => {
     try {
 
@@ -144,4 +106,65 @@ exports.getMyAssignedRequests = async (req, res) => {
     }
 };
 
+exports.createRequest = async (req, res) => {
+  try {
+
+    const {
+      customerId,
+      serviceId,
+      title,
+      description,
+      address,
+      scheduleDate
+    } = req.body;
+
+    // kiểm tra dữ liệu bắt buộc
+    if (!customerId || !serviceId || !scheduleDate) {
+      return res.status(400).json({
+        message: "customerId, serviceId and scheduleDate are required"
+      });
+    }
+
+    // kiểm tra customer tồn tại
+    const customer = await User.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({
+        message: "Customer not found"
+      });
+    }
+
+    // kiểm tra service tồn tại
+    const service = await Service.findById(serviceId);
+    if (!service) {
+      return res.status(404).json({
+        message: "Service not found"
+      });
+    }
+
+    // tạo request
+    const newRequest = new Request({
+      customerId,
+      serviceId,
+      title,
+      description,
+      address,
+      scheduleDate
+    });
+
+    const savedRequest = await newRequest.save();
+
+    res.status(201).json({
+      message: "Request created successfully",
+      data: savedRequest
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      message: "Server error",
+      error: error.message
+    });
+
+  }
+};
 

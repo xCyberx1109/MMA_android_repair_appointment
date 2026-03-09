@@ -29,7 +29,9 @@ export default function Login() {
 
       const token = res.data.token;
       const role = res.data.user.role;
+      const UserId = res.data.user._id;
 
+      await AsyncStorage.setItem("UserId", UserId);
       await AsyncStorage.setItem("token", token);
       await AsyncStorage.setItem("role", role);
 

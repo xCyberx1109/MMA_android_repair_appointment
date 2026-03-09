@@ -2,7 +2,8 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { Card, Text, Button, Chip } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useState } from "react";
 import axios from "axios";
 
 type Request = {
@@ -22,15 +23,17 @@ type Request = {
   };
 };
 
-
 export default function CustomerHome() {
 
   const router = useRouter();
   const [requests, setRequests] = useState<Request[]>([]);
 
-  useEffect(() => {
-    fetchMyRequests();
-  }, []);
+  // reload mỗi khi quay lại màn hình
+  useFocusEffect(
+    useCallback(() => {
+      fetchMyRequests();
+    }, [])
+  );
 
   const fetchMyRequests = async () => {
     try {
@@ -38,7 +41,7 @@ export default function CustomerHome() {
       const token = await AsyncStorage.getItem("token");
 
       const res = await axios.get(
-        "http://localhost:5000/api/request/customer/my",
+        "http://localhost:5000/api/requests/customer/my",
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -79,12 +82,9 @@ export default function CustomerHome() {
     return `${day}/${month}/${year}`;
   };
 
-
-
   return (
     <ScrollView style={styles.container}>
 
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>My Requests</Text>
 
@@ -93,7 +93,6 @@ export default function CustomerHome() {
         </Button>
       </View>
 
-      {/* Request List */}
       {requests.map((item) => (
         <Card key={item._id} style={styles.card}>
 

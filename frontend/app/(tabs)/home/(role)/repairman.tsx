@@ -36,7 +36,7 @@ export default function RepairmanHome() {
       const token = await AsyncStorage.getItem("token");
 
       const res = await axios.get(
-        "http://localhost:5000/api/request/repairman/my",
+        "http://localhost:5000/api/requests/repairman/my",
         {
           headers: {
             Authorization: `Bearer ${token}`

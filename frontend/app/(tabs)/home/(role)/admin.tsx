@@ -47,7 +47,7 @@ export default function AdminHome() {
       const token = await AsyncStorage.getItem("token");
 
       const res = await axios.get<DashboardResponse>(
-        "http://localhost:5000/api/request/dashboard",
+        "http://localhost:5000/api/requests/dashboard",
         {
           headers: {
             Authorization: `Bearer ${token}`
