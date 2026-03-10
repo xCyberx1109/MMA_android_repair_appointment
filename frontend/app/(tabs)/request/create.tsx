@@ -4,7 +4,7 @@ import {
     Text,
     TextInput,
     Button,
-    StyleSheet
+    
 } from "react-native";
 
 import axios from "axios";
@@ -12,6 +12,7 @@ import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { commonStyles } from "../../../styles/commonStyle";
 
 interface Service {
     _id: string;
@@ -109,46 +110,51 @@ export default function CreateRequest() {
 
         }
     };
+    const formatLocalDateTime = (date: Date) => {
+        const offset = date.getTimezoneOffset();
+        const localDate = new Date(date.getTime() - offset * 60000);
+        return localDate.toISOString().slice(0, 16);
+    };
 
     return (
-        <View style={styles.container}>
+        <View style={commonStyles.container}>
 
-            <Text style={styles.title}>Create Service Request</Text>
+            <Text style={commonStyles.title}>Create Service Request</Text>
 
             {/* Title */}
-            <Text style={styles.label}>Title</Text>
+            <Text style={commonStyles.label}>Title</Text>
             <TextInput
-                style={styles.input}
+                style={commonStyles.input}
                 value={title}
                 onChangeText={setTitle}
                 placeholder="Enter title"
             />
-            {errors.title && <Text style={styles.error}>{errors.title}</Text>}
+            {errors.title && <Text style={commonStyles.error}>{errors.title}</Text>}
 
             {/* Description */}
-            <Text style={styles.label}>Description</Text>
+            <Text style={commonStyles.label}>Description</Text>
             <TextInput
-                style={[styles.input, styles.textArea]}
+                style={[commonStyles.input, commonStyles.textArea]}
                 value={description}
                 onChangeText={setDescription}
                 placeholder="Enter description"
                 multiline
             />
-            {errors.description && <Text style={styles.error}>{errors.description}</Text>}
+            {errors.description && <Text style={commonStyles.error}>{errors.description}</Text>}
 
             {/* Address */}
-            <Text style={styles.label}>Address</Text>
+            <Text style={commonStyles.label}>Address</Text>
             <TextInput
-                style={styles.input}
+                style={commonStyles.input}
                 value={address}
                 onChangeText={setAddress}
                 placeholder="Enter address"
             />
-            {errors.address && <Text style={styles.error}>{errors.address}</Text>}
+            {errors.address && <Text style={commonStyles.error}>{errors.address}</Text>}
 
             {/* Service */}
-            <Text style={styles.label}>Service</Text>
-            <View style={styles.pickerWrapper}>
+            <Text style={commonStyles.label}>Service</Text>
+            <View style={commonStyles.pickerWrapper}>
                 <Picker
                     selectedValue={serviceId}
                     onValueChange={(itemValue) => setServiceId(itemValue)}
@@ -164,22 +170,22 @@ export default function CreateRequest() {
                 </Picker>
             </View>
 
-            {errors.serviceId && <Text style={styles.error}>{errors.serviceId}</Text>}
+            {errors.serviceId && <Text style={commonStyles.error}>{errors.serviceId}</Text>}
 
             {/* Date */}
-            <Text style={styles.label}>Schedule Date</Text>
+            <Text style={commonStyles.label}>Schedule Date</Text>
 
             {Platform.OS === "web" ? (
                 <input
                     type="datetime-local"
                     title="Schedule Date"
-                    style={styles.webDate}
-                    value={scheduleDate.toISOString().slice(0, 16)}
+                    style={commonStyles.webDate}
+                    value={formatLocalDateTime(scheduleDate)}
                     onChange={(e) => setScheduleDate(new Date(e.target.value))}
                 />
             ) : (
                 <>
-                    <View style={styles.dateButton}>
+                    <View style={commonStyles.dateButton}>
                         <Button
                             title={scheduleDate.toLocaleString()}
                             onPress={() => setShowDatePicker(true)}
@@ -201,10 +207,10 @@ export default function CreateRequest() {
                 </>
             )}
 
-            {errors.scheduleDate && <Text style={styles.error}>{errors.scheduleDate}</Text>}
+            {errors.scheduleDate && <Text style={commonStyles.error}>{errors.scheduleDate}</Text>}
 
             {/* Button */}
-            <View style={styles.buttonWrapper}>
+            <View style={commonStyles.buttonWrapper}>
                 <Button
                     title="Create Request"
                     onPress={createRequest}
@@ -215,68 +221,4 @@ export default function CreateRequest() {
     );
 }
 
-const styles = StyleSheet.create({
 
-    container: {
-        flex: 1,
-        padding: 20,
-        backgroundColor: "#f5f5f5"
-    },
-
-    title: {
-        fontSize: 24,
-        fontWeight: "bold",
-        marginBottom: 20,
-        textAlign: "center"
-    },
-
-    label: {
-        fontSize: 15,
-        fontWeight: "600",
-        marginTop: 10
-    },
-
-    input: {
-        borderWidth: 1,
-        borderColor: "#ddd",
-        padding: 12,
-        borderRadius: 8,
-        marginTop: 5,
-        backgroundColor: "#fff"
-    },
-
-    textArea: {
-        height: 80
-    },
-
-    pickerWrapper: {
-        borderWidth: 1,
-        borderColor: "#ddd",
-        borderRadius: 8,
-        marginTop: 5,
-        backgroundColor: "#fff"
-    },
-
-    webDate: {
-        padding: 10,
-        marginTop: 5,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: "#ddd"
-    },
-
-    dateButton: {
-        marginTop: 5
-    },
-
-    buttonWrapper: {
-        marginTop: 25
-    },
-
-    error: {
-        color: "#ff3b30",
-        marginTop: 4,
-        fontSize: 13
-    }
-
-});

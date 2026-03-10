@@ -1,10 +1,12 @@
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View, Modal, TextInput, Platform } from "react-native";
 import { Card, Text, Button, Chip } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
 import axios from "axios";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { commonStyles } from "../../../../styles/commonStyle";
 
 type Request = {
   _id: string;
@@ -26,9 +28,18 @@ type Request = {
 export default function CustomerHome() {
 
   const router = useRouter();
+
   const [requests, setRequests] = useState<Request[]>([]);
 
-  // reload mỗi khi quay lại màn hình
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
+
+  const [editTitle, setEditTitle] = useState("");
+  const [editAddress, setEditAddress] = useState("");
+  const [editScheduleDate, setEditScheduleDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+
   useFocusEffect(
     useCallback(() => {
       fetchMyRequests();
@@ -43,9 +54,7 @@ export default function CustomerHome() {
       const res = await axios.get(
         "http://localhost:5000/api/requests/customer/my",
         {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+          headers: { Authorization: `Bearer ${token}` }
         }
       );
 
@@ -62,11 +71,65 @@ export default function CustomerHome() {
     router.replace("/auth/login");
   };
 
-  const getStatusColor = (status: string) => {
+  const openEditModal = (request: Request) => {
+
+    setSelectedRequest(request);
+
+    setEditTitle(request.title);
+    setEditAddress(request.address);
+
+    if (request.scheduleDate) {
+      setEditScheduleDate(new Date(request.scheduleDate));
+    } else {
+      setEditScheduleDate(new Date());
+    }
+
+    setModalVisible(true);
+  };
+
+  const onChangeDate = (event: any, selectedDate?: Date) => {
+
+    setShowDatePicker(false);
+
+    if (selectedDate) {
+      setEditScheduleDate(selectedDate);
+    }
+  };
+
+
+  const updateRequest = async () => {
+
+    try {
+
+      const token = await AsyncStorage.getItem("token");
+
+      await axios.put(
+        `http://localhost:5000/api/requests/${selectedRequest?._id}`,
+        {
+          title: editTitle,
+          address: editAddress,
+          scheduleDate: editScheduleDate
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      setModalVisible(false);
+
+      fetchMyRequests();
+
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const getStatusColor = (status?: string) => {
     if (status === "pending") return "#f59e0b";
-    if (status === "accepted") return "#3b82f6";
+    if (status === "assigned") return "#3b82f6";
     if (status === "in_progress") return "#6366f1";
     if (status === "completed") return "#10b981";
+    if (status === "cancelled") return "#ef4444";
     return "gray";
   };
 
@@ -81,12 +144,17 @@ export default function CustomerHome() {
 
     return `${day}/${month}/${year}`;
   };
+  const formatLocalDateTime = (date: Date) => {
+    const offset = date.getTimezoneOffset();
+    const localDate = new Date(date.getTime() - offset * 60000);
+    return localDate.toISOString().slice(0, 16);
+  };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={commonStyles.container}>
 
-      <View style={styles.header}>
-        <Text style={styles.title}>My Requests</Text>
+      <View style={commonStyles.header}>
+        <Text style={commonStyles.title}>My Requests</Text>
 
         <Button mode="outlined" onPress={handleLogout}>
           Logout
@@ -94,18 +162,18 @@ export default function CustomerHome() {
       </View>
 
       {requests.map((item) => (
-        <Card key={item._id} style={styles.card}>
+        <Card key={item._id} style={commonStyles.card}>
 
           <Card.Content>
 
-            <View style={styles.rowTop}>
-              <Text style={styles.requestTitle}>
+            <View style={commonStyles.rowTop}>
+              <Text style={commonStyles.requestTitle}>
                 {item.title}
               </Text>
 
               <Chip
                 style={[
-                  styles.statusChip,
+                  commonStyles.statusChip,
                   { backgroundColor: getStatusColor(item.status) }
                 ]}
                 textStyle={{ color: "white" }}
@@ -114,77 +182,131 @@ export default function CustomerHome() {
               </Chip>
             </View>
 
-            <Text style={styles.info}>
+            <Text style={commonStyles.info}>
               🔧 Service: {item.serviceId?.name}
             </Text>
 
-            <Text style={styles.info}>
+            <Text style={commonStyles.info}>
               📍 Address: {item.address}
             </Text>
 
-            <Text style={styles.info}>
+            <Text style={commonStyles.info}>
               📅 Schedule: {formatDate(item.scheduleDate)}
             </Text>
 
-            <Text style={styles.info}>
+            <Text style={commonStyles.info}>
               👨‍🔧 Repairman: {item.repairmanId?.name || "Waiting assignment"}
             </Text>
+
+            {item.status === "pending" && (
+              <Button
+                mode="contained"
+                style={{ marginTop: 10 }}
+                onPress={() => openEditModal(item)}
+              >
+                Edit Request
+              </Button>
+            )}
 
           </Card.Content>
 
         </Card>
       ))}
 
+      {/* MODAL EDIT */}
+
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="slide"
+      >
+        <View style={commonStyles.modalContainer}>
+
+          <View style={commonStyles.modalContent}>
+
+            <Text style={commonStyles.modalTitle}>
+              Edit Request
+            </Text>
+
+            {/* Title */}
+            <TextInput
+              style={commonStyles.input}
+              placeholder="Title"
+              value={editTitle}
+              onChangeText={setEditTitle}
+            />
+
+            {/* Address */}
+            <TextInput
+              style={commonStyles.input}
+              placeholder="Address"
+              value={editAddress}
+              onChangeText={setEditAddress}
+            />
+
+            {/* Schedule Date */}
+            <Text style={commonStyles.label}>Schedule Date</Text>
+
+            {Platform.OS === "web" ? (
+              <View>
+                <Text style={commonStyles.label}>Schedule Date</Text>
+
+                <input
+                  type="datetime-local"
+                  title="Schedule Date"
+                  aria-label="Schedule Date"
+                  style={commonStyles.webDate}
+                  value={formatLocalDateTime(editScheduleDate)}
+                  onChange={(e) => setEditScheduleDate(new Date(e.target.value))}
+                />
+              </View>
+
+            ) : (
+              <>
+                <View style={commonStyles.dateButton}>
+                  <Button
+                    mode="outlined"
+                    onPress={() => setShowDatePicker(true)}
+                  >
+                    {editScheduleDate.toLocaleString()}
+                  </Button>
+                </View>
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={editScheduleDate}
+                    mode="datetime"
+                    minimumDate={new Date()}
+                    display="default"
+                    onChange={(event, date) => {
+                      setShowDatePicker(false);
+                      if (date) setEditScheduleDate(date);
+                    }}
+                  />
+                )}
+              </>
+            )}
+
+            <View style={commonStyles.modalButtons}>
+
+              <Button
+                mode="outlined"
+                onPress={() => setModalVisible(false)}
+              >
+                Cancel
+              </Button>
+
+              <Button
+                mode="contained"
+                onPress={updateRequest}
+              >
+                Save
+              </Button>
+
+            </View>
+          </View>
+
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-
-  container: {
-    padding: 16,
-    backgroundColor: "#f5f5f5"
-  },
-
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20
-  },
-
-  title: {
-    fontSize: 26,
-    fontWeight: "bold"
-  },
-
-  card: {
-    marginBottom: 15,
-    borderRadius: 14,
-    elevation: 3
-  },
-
-  rowTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10
-  },
-
-  requestTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    flex: 1
-  },
-
-  statusChip: {
-    height: 28
-  },
-
-  info: {
-    fontSize: 14,
-    color: "#555",
-    marginTop: 2
-  }
-
-});

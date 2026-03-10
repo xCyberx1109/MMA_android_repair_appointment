@@ -1,9 +1,10 @@
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View, Alert, Platform } from "react-native";
 import { Card, Text, Button, Chip } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { commonStyles } from "../../../../styles/commonStyle";
 
 type Request = {
   _id: string;
@@ -69,19 +70,70 @@ export default function RepairmanHome() {
     return `${day}/${month}/${year}`;
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status?: string) => {
     if (status === "pending") return "#f59e0b";
-    if (status === "accepted") return "#3b82f6";
+    if (status === "assigned") return "#3b82f6";
     if (status === "in_progress") return "#6366f1";
     if (status === "completed") return "#10b981";
+    if (status === "cancelled") return "#ef4444";
     return "gray";
   };
 
-  return (
-    <ScrollView style={styles.container}>
+  const updateStatus = async (id: string, status: string) => {
+    try {
 
-      <View style={styles.header}>
-        <Text style={styles.title}>My Jobs 🔧</Text>
+      const token = await AsyncStorage.getItem("token");
+
+      await axios.put(
+        `http://localhost:5000/api/requests/${id}/status`,
+        { status },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      fetchMyJobs();
+
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  const confirmStatusChange = (id: string, status: string) => {
+
+    const message =
+      status === "in_progress"
+        ? "Start this job?"
+        : "Mark this job as completed?";
+
+    // Nếu chạy trên web
+    if (Platform.OS === "web") {
+      const ok = window.confirm(message);
+      if (ok) {
+        updateStatus(id, status);
+      }
+      return;
+    }
+
+    Alert.alert(
+      "Confirm",
+      message,
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Confirm", onPress: () => updateStatus(id, status) }
+      ],
+      { cancelable: true }
+    );
+  };
+
+
+
+  return (
+    <ScrollView style={commonStyles.container}>
+
+      <View style={commonStyles.header}>
+        <Text style={commonStyles.title}>My Jobs 🔧</Text>
 
         <Button mode="outlined" onPress={handleLogout}>
           Logout
@@ -89,12 +141,12 @@ export default function RepairmanHome() {
       </View>
 
       {requests.map((item) => (
-        <Card key={item._id} style={styles.card}>
+        <Card key={item._id} style={commonStyles.card}>
 
           <Card.Content>
 
-            <View style={styles.rowTop}>
-              <Text style={styles.jobTitle}>
+            <View style={commonStyles.rowTop}>
+              <Text style={commonStyles.jobTitle}>
                 {item.title}
               </Text>
 
@@ -109,71 +161,48 @@ export default function RepairmanHome() {
 
             </View>
 
-            <Text style={styles.info}>
+            <Text style={commonStyles.info}>
               🔧 Service: {item.serviceId?.name}
             </Text>
 
-            <Text style={styles.info}>
+            <Text style={commonStyles.info}>
               👤 Customer: {item.customerId?.name}
             </Text>
 
-            <Text style={styles.info}>
+            <Text style={commonStyles.info}>
               📅 Schedule: {formatDate(item.scheduleDate)}
             </Text>
 
-            <Text style={styles.info}>
+            <Text style={commonStyles.info}>
               📍 Address: {item.address}
             </Text>
 
           </Card.Content>
 
+          {item.status === "assigned" && (
+            <Card.Actions>
+              <Button
+                mode="contained"
+                onPress={() => confirmStatusChange(item._id, "in_progress")}
+              >
+                Start Job
+              </Button>
+            </Card.Actions>
+          )}
+
+          {item.status === "in_progress" && (
+            <Card.Actions>
+              <Button
+                mode="contained"
+                onPress={() => confirmStatusChange(item._id, "completed")}
+              >
+                Complete
+              </Button>
+            </Card.Actions>
+          )}
         </Card>
       ))}
 
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-
-  container: {
-    padding: 16,
-    backgroundColor: "#f5f5f5"
-  },
-
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20
-  },
-
-  title: {
-    fontSize: 26,
-    fontWeight: "bold"
-  },
-
-  card: {
-    marginBottom: 15,
-    borderRadius: 14
-  },
-
-  rowTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 10
-  },
-
-  jobTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    flex: 1
-  },
-
-  info: {
-    fontSize: 14,
-    color: "#555",
-    marginTop: 2
-  }
-
-});

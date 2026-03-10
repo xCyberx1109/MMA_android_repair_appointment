@@ -7,7 +7,7 @@ exports.getAdminDashboard = async (req, res) => {
 
         const [
             pendingRequests,
-            acceptedRequests,
+            assignedRequests,
             inProgressRequests,
             completedRequests,
             cancelledRequests
@@ -18,9 +18,10 @@ exports.getAdminDashboard = async (req, res) => {
                 .populate("serviceId", "name")
                 .sort({ createdAt: -1 }),
 
-            Request.find({ status: "accepted" })
+            Request.find({ status: "assigned" })
                 .populate("customerId", "name email")
                 .populate("serviceId", "name")
+                .populate("repairmanId", "name")
                 .sort({ createdAt: -1 }),
 
             Request.find({ status: "in_progress" })
@@ -41,28 +42,31 @@ exports.getAdminDashboard = async (req, res) => {
         ]);
 
         res.json({
+
             counts: {
                 pending: pendingRequests.length,
-                accepted: acceptedRequests.length,
+                assigned: assignedRequests.length,
                 inProgress: inProgressRequests.length,
                 completed: completedRequests.length,
                 cancelled: cancelledRequests.length
             },
 
             pendingRequests,
-            acceptedRequests,
+            assignedRequests,
             inProgressRequests,
             completedRequests,
             cancelledRequests
+
         });
 
     } catch (error) {
+
         res.status(500).json({
             message: error.message
         });
+
     }
 };
-
 
 exports.getMyRequests = async (req, res) => {
     try {
@@ -107,64 +111,196 @@ exports.getMyAssignedRequests = async (req, res) => {
 };
 
 exports.createRequest = async (req, res) => {
-  try {
+    try {
 
-    const {
-      customerId,
-      serviceId,
-      title,
-      description,
-      address,
-      scheduleDate
-    } = req.body;
+        const {
+            customerId,
+            serviceId,
+            title,
+            description,
+            address,
+            scheduleDate
+        } = req.body;
 
-    // kiểm tra dữ liệu bắt buộc
-    if (!customerId || !serviceId || !scheduleDate) {
-      return res.status(400).json({
-        message: "customerId, serviceId and scheduleDate are required"
-      });
+        // kiểm tra dữ liệu bắt buộc
+        if (!customerId || !serviceId || !scheduleDate) {
+            return res.status(400).json({
+                message: "customerId, serviceId and scheduleDate are required"
+            });
+        }
+
+        // kiểm tra customer tồn tại
+        const customer = await User.findById(customerId);
+        if (!customer) {
+            return res.status(404).json({
+                message: "Customer not found"
+            });
+        }
+
+        // kiểm tra service tồn tại
+        const service = await Service.findById(serviceId);
+        if (!service) {
+            return res.status(404).json({
+                message: "Service not found"
+            });
+        }
+
+        // tạo request
+        const newRequest = new Request({
+            customerId,
+            serviceId,
+            title,
+            description,
+            address,
+            scheduleDate
+        });
+
+        const savedRequest = await newRequest.save();
+
+        res.status(201).json({
+            message: "Request created successfully",
+            data: savedRequest
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            message: "Server error",
+            error: error.message
+        });
+
     }
-
-    // kiểm tra customer tồn tại
-    const customer = await User.findById(customerId);
-    if (!customer) {
-      return res.status(404).json({
-        message: "Customer not found"
-      });
-    }
-
-    // kiểm tra service tồn tại
-    const service = await Service.findById(serviceId);
-    if (!service) {
-      return res.status(404).json({
-        message: "Service not found"
-      });
-    }
-
-    // tạo request
-    const newRequest = new Request({
-      customerId,
-      serviceId,
-      title,
-      description,
-      address,
-      scheduleDate
-    });
-
-    const savedRequest = await newRequest.save();
-
-    res.status(201).json({
-      message: "Request created successfully",
-      data: savedRequest
-    });
-
-  } catch (error) {
-
-    res.status(500).json({
-      message: "Server error",
-      error: error.message
-    });
-
-  }
 };
 
+exports.getAvailableRepairmen = async (req, res) => {
+    try {
+
+        const repairmen = await User.find({ role: "repairman" });
+
+        const available = [];
+
+        for (const r of repairmen) {
+
+            const count = await Request.countDocuments({
+                repairmanId: r._id,
+                status: { $in: ["assigned", "working"] }
+            });
+
+            if (count < 3) {
+                available.push(r);
+            }
+        }
+
+        res.json(available);
+
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+exports.assignRepairman = async (req, res) => {
+    try {
+
+        const requestId = req.params.id;
+        const { repairmanId } = req.body;
+
+        const count = await Request.countDocuments({
+            repairmanId,
+            status: { $in: ["assigned", "in_progress"] }
+        });
+
+        if (count >= 3) {
+            return res.status(400).json({
+                message: "Repairman already has 3 tasks"
+            });
+        }
+
+        const request = await Request.findByIdAndUpdate(
+            requestId,
+            {
+                repairmanId,
+                status: "assigned"
+            },
+            { new: true }
+        );
+
+        res.json(request);
+
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+exports.updateRequestStatus = async (req, res) => {
+    try {
+        const requestId = req.params.id;
+        const { status } = req.body;
+
+        const validStatus = [
+            "pending",
+            "assigned",
+            "in_progress",
+            "completed",
+            "cancelled"
+        ];
+        if (!validStatus.includes(status)) {
+            return res.status(400).json({
+                message: "Invalid status"
+            });
+        }
+
+        const request = await Request.findByIdAndUpdate(
+            requestId,
+            { status },
+            { returnDocument: "after", runValidators: true }
+        );
+        if (!request) {
+            return res.status(404).json({
+                message: "Request not found"
+            });
+        }
+
+        res.json({
+            message: "Status updated",
+            request
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            message: error.message
+        });
+
+    }
+
+};
+
+
+exports.updateRequest = async (req, res) => {
+    try {
+
+        const { title, address } = req.body;
+
+        const request = await Request.findById(req.params.id);
+
+        if (!request) {
+            return res.status(404).json({ message: "Request not found" });
+        }
+
+        if (request.status !== "pending") {
+            return res.status(400).json({
+                message: "Only pending request can be edited"
+            });
+        }
+
+        request.title = title || request.title;
+        request.address = address || request.address;
+
+        await request.save();
+
+        res.json(request);
+
+    } catch (err) {
+        res.status(500).json(err);
+    }
+};

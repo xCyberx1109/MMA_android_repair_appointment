@@ -1,10 +1,11 @@
-import { View, StyleSheet } from "react-native";
+import { View } from "react-native";
 import { TextInput, Button, Card, Text } from "react-native-paper";
 import { loginApi } from "../../constants/authApi";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import axios from "axios";
+import { commonStyles } from "../../styles/commonStyle";
 
 export default function Login() {
 
@@ -35,15 +36,12 @@ export default function Login() {
       await AsyncStorage.setItem("token", token);
       await AsyncStorage.setItem("role", role);
 
-      // điều hướng theo role
       if (role === "admin") {
         router.replace("/home/admin");
       }
-
       else if (role === "repairman") {
         router.replace("/home/repairman");
       }
-
       else {
         router.replace("/home/customer");
       }
@@ -62,12 +60,12 @@ export default function Login() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={commonStyles.container}>
 
-      <Card style={styles.card}>
+      <Card style={commonStyles.card}>
         <Card.Content>
 
-          <Text variant="titleLarge" style={styles.title}>
+          <Text variant="titleLarge" style={commonStyles.title}>
             Repair booking service
           </Text>
 
@@ -76,7 +74,7 @@ export default function Login() {
             mode="outlined"
             value={email}
             onChangeText={setEmail}
-            style={styles.input}
+            style={commonStyles.input}
           />
 
           <TextInput
@@ -85,11 +83,11 @@ export default function Login() {
             secureTextEntry
             value={password}
             onChangeText={setPassword}
-            style={styles.input}
+            style={commonStyles.input}
           />
 
           {error ? (
-            <Text style={styles.errorText}>
+            <Text style={commonStyles.errorText}>
               {error}
             </Text>
           ) : null}
@@ -98,9 +96,17 @@ export default function Login() {
             mode="contained"
             loading={loading}
             onPress={handleLogin}
-            style={styles.button}
+            style={commonStyles.button}
           >
             Login
+          </Button>
+
+          {/* Nút Register */}
+          <Button
+            mode="text"
+            onPress={() => router.push("/auth/register")}
+          >
+            Don't have an account? Register
           </Button>
 
         </Card.Content>
@@ -109,31 +115,3 @@ export default function Login() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 20,
-    backgroundColor: "#f5f5f5"
-  },
-  card: {
-    padding: 10,
-    borderRadius: 10
-  },
-  title: {
-    textAlign: "center",
-    marginBottom: 20
-  },
-  input: {
-    marginBottom: 15
-  },
-  button: {
-    marginTop: 10
-  },
-  errorText: {
-    color: "red",
-    textAlign: "center",
-    marginBottom: 10
-  }
-});
