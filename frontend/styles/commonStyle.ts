@@ -126,12 +126,14 @@ export const commonStyles = StyleSheet.create({
 
     pickerWrapper: {
         borderWidth: 1,
-        borderColor: "#ddd",
-        borderRadius: 8,
-        backgroundColor: "#fff",
+        borderColor: "#ccc",
+        borderRadius: 5,
         overflow: "hidden"
     },
 
+    picker: {
+        height: 50
+    },
     webDate: {
         padding: 10,
         marginTop: 5,
@@ -197,6 +199,24 @@ export const commonStyles = StyleSheet.create({
 
     statusChip: {
         height: 28
+    },
+    statusActive: {
+        backgroundColor: "#e8f5e9"
+    },
+
+    statusInactive: {
+        backgroundColor: "#ffebee"
+    },
+
+    statusTextActive: {
+        color: "#2e7d32",
+        fontWeight: "bold"
+    },
+
+    statusTextInactive: {
+        color: "#c62828",
+        fontWeight: "bold"
     }
+
 
 });

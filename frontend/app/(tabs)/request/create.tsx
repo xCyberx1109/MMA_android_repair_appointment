@@ -1,17 +1,12 @@
-import React, { useState, useEffect } from "react";
-import {
-    View,
-    Text,
-    TextInput,
-    Button,
-    
-} from "react-native";
-
+import React, { useState, useEffect, useCallback } from "react";
+import { View, Platform } from "react-native";
+import { Button, TextInput, Text } from "react-native-paper";
 import axios from "axios";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
+
 import { commonStyles } from "../../../styles/commonStyle";
 
 interface Service {
@@ -19,9 +14,12 @@ interface Service {
     name: string;
     description: string;
     price: number;
+    is_active: boolean;
 }
 
 export default function CreateRequest() {
+
+    const API = "http://localhost:5000";
 
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -37,14 +35,11 @@ export default function CreateRequest() {
 
     const [errors, setErrors] = useState<any>({});
 
-    useEffect(() => {
-        fetchServices();
-        getUserId();
-    }, []);
+    /* ================= FETCH SERVICES ================= */
 
     const fetchServices = async () => {
         try {
-            const res = await axios.get("http://localhost:5000/api/services");
+            const res = await axios.get(`${API}/api/services`);
             setServices(res.data);
         } catch (error) {
             console.log(error);
@@ -59,6 +54,17 @@ export default function CreateRequest() {
             console.log(error);
         }
     };
+
+    /* ================= REFRESH WHEN SCREEN FOCUS ================= */
+
+    useFocusEffect(
+        useCallback(() => {
+            fetchServices();
+            getUserId();
+        }, [])
+    );
+
+    /* ================= VALIDATE ================= */
 
     const validate = () => {
 
@@ -79,6 +85,8 @@ export default function CreateRequest() {
         return Object.keys(newErrors).length === 0;
     };
 
+    /* ================= CREATE REQUEST ================= */
+
     const createRequest = async () => {
 
         if (!validate()) return;
@@ -86,7 +94,7 @@ export default function CreateRequest() {
         try {
 
             await axios.post(
-                "http://localhost:5000/api/requests/create",
+                `${API}/api/requests/create`,
                 {
                     customerId,
                     serviceId,
@@ -110,6 +118,9 @@ export default function CreateRequest() {
 
         }
     };
+
+    /* ================= FORMAT DATE FOR WEB ================= */
+
     const formatLocalDateTime = (date: Date) => {
         const offset = date.getTimezoneOffset();
         const localDate = new Date(date.getTime() - offset * 60000);
@@ -138,7 +149,7 @@ export default function CreateRequest() {
                 value={description}
                 onChangeText={setDescription}
                 placeholder="Enter description"
-                multiline
+                scrollEnabled={false}
             />
             {errors.description && <Text style={commonStyles.error}>{errors.description}</Text>}
 
@@ -154,25 +165,31 @@ export default function CreateRequest() {
 
             {/* Service */}
             <Text style={commonStyles.label}>Service</Text>
+
             <View style={commonStyles.pickerWrapper}>
                 <Picker
+                    style={commonStyles.picker}
                     selectedValue={serviceId}
                     onValueChange={(itemValue) => setServiceId(itemValue)}
                 >
+
                     <Picker.Item label="Select service" value="" />
-                    {services.map((service) => (
-                        <Picker.Item
-                            key={service._id}
-                            label={service.name}
-                            value={service._id}
-                        />
-                    ))}
+
+                    {services
+                        .filter((service) => service.is_active)
+                        .map((service) => (
+                            <Picker.Item
+                                key={service._id}
+                                label={service.name}
+                                value={service._id}
+                            />
+                        ))}
+
                 </Picker>
             </View>
-
             {errors.serviceId && <Text style={commonStyles.error}>{errors.serviceId}</Text>}
 
-            {/* Date */}
+            {/* Schedule Date */}
             <Text style={commonStyles.label}>Schedule Date</Text>
 
             {Platform.OS === "web" ? (
@@ -187,9 +204,11 @@ export default function CreateRequest() {
                 <>
                     <View style={commonStyles.dateButton}>
                         <Button
-                            title={scheduleDate.toLocaleString()}
-                            onPress={() => setShowDatePicker(true)}
-                        />
+                            mode="contained"
+                            onPress={createRequest}
+                        >
+                            Create Request
+                        </Button>
                     </View>
 
                     {showDatePicker && (
@@ -209,16 +228,18 @@ export default function CreateRequest() {
 
             {errors.scheduleDate && <Text style={commonStyles.error}>{errors.scheduleDate}</Text>}
 
-            {/* Button */}
-            <View style={commonStyles.buttonWrapper}>
-                <Button
-                    title="Create Request"
-                    onPress={createRequest}
-                />
+            {/* Submit Button */}
+            <View>
+                <View style={commonStyles.buttonWrapper}>
+                    <Button
+                        mode="contained"
+                        onPress={createRequest}
+                    >
+                        Create Request
+                    </Button>
+                </View>
             </View>
 
         </View>
     );
 }
-
-

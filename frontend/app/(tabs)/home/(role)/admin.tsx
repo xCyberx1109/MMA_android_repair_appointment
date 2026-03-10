@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { Card, Text, Button, Chip, Modal, Portal } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
@@ -43,6 +43,8 @@ export default function AdminHome() {
   const [inProgress, setInProgress] = useState<Request[]>([]);
   const [completed, setCompleted] = useState<Request[]>([]);
   const [cancelled, setCancelled] = useState<Request[]>([]);
+
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
   const [visible, setVisible] = useState(false);
@@ -221,15 +223,23 @@ export default function AdminHome() {
           📍 Address: {item.address}
         </Text>
 
-        {item.status === "assigned" && (
+        {item.repairmanId && (
           <Text style={commonStyles.info}>
-            👨‍🔧 Assigned to: {item.repairmanId?.name}
+            👨‍🔧 Repairman: {item.repairmanId?.name}
           </Text>
         )}
 
       </Card.Content>
     </Card>
   );
+
+  const allRequests = [
+    ...pending,
+    ...assigned,
+    ...inProgress,
+    ...completed,
+    ...cancelled
+  ];
 
   return (
     <ScrollView style={commonStyles.container}>
@@ -241,6 +251,8 @@ export default function AdminHome() {
           Logout
         </Button>
       </View>
+
+      {/* STATS */}
 
       <View style={commonStyles.statsContainer}>
 
@@ -286,20 +298,45 @@ export default function AdminHome() {
 
       </View>
 
-      <Text style={commonStyles.section}>Pending Requests</Text>
-      {pending.map(renderCard)}
+      {/* FILTER */}
 
-      <Text style={commonStyles.section}>Assigned</Text>
-      {assigned.map(renderCard)}
+      <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 15 }}>
 
-      <Text style={commonStyles.section}>In Progress</Text>
-      {inProgress.map(renderCard)}
+        <Chip selected={statusFilter === "all"} onPress={() => setStatusFilter("all")} style={{ marginRight: 5, marginBottom: 5 }}>
+          All
+        </Chip>
 
-      <Text style={commonStyles.section}>Cancelled</Text>
-      {cancelled.map(renderCard)}
+        <Chip selected={statusFilter === "pending"} onPress={() => setStatusFilter("pending")} style={{ marginRight: 5, marginBottom: 5 }}>
+          Pending
+        </Chip>
 
-      <Text style={commonStyles.section}>Completed</Text>
-      {completed.map(renderCard)}
+        <Chip selected={statusFilter === "assigned"} onPress={() => setStatusFilter("assigned")} style={{ marginRight: 5, marginBottom: 5 }}>
+          Assigned
+        </Chip>
+
+        <Chip selected={statusFilter === "in_progress"} onPress={() => setStatusFilter("in_progress")} style={{ marginRight: 5, marginBottom: 5 }}>
+          In Progress
+        </Chip>
+
+        <Chip selected={statusFilter === "completed"} onPress={() => setStatusFilter("completed")} style={{ marginRight: 5, marginBottom: 5 }}>
+          Completed
+        </Chip>
+
+        <Chip selected={statusFilter === "cancelled"} onPress={() => setStatusFilter("cancelled")} style={{ marginRight: 5, marginBottom: 5 }}>
+          Cancelled
+        </Chip>
+
+      </View>
+
+      {/* REQUEST LIST */}
+
+      {allRequests
+        .filter((item) =>
+          statusFilter === "all"
+            ? true
+            : item.status === statusFilter
+        )
+        .map(renderCard)}
 
       <Portal>
         <Modal
@@ -376,4 +413,3 @@ export default function AdminHome() {
     </ScrollView>
   );
 }
-

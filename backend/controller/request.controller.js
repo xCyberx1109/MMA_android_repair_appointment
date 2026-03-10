@@ -74,7 +74,7 @@ exports.getMyRequests = async (req, res) => {
         const customerId = req.user.id;
 
         const requests = await Request.find({ customerId })
-            .populate("serviceId", "name")
+            .populate("serviceId", "name price")
             .populate("repairmanId", "name")
             .sort({ createdAt: -1 });
 

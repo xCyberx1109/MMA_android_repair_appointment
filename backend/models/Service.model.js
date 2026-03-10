@@ -18,6 +18,11 @@ const ServiceSchema = new mongoose.Schema(
       type: Number,
       required: true,
       min: 0
+    },
+    is_active: {
+      type: Boolean,
+      required: true,
+      default: true
     }
 
   },

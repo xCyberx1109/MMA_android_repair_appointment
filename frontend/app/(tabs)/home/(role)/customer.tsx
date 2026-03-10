@@ -18,6 +18,7 @@ type Request = {
 
   serviceId?: {
     name: string;
+    price: number;
   };
 
   repairmanId?: {
@@ -38,6 +39,7 @@ export default function CustomerHome() {
   const [editAddress, setEditAddress] = useState("");
   const [editScheduleDate, setEditScheduleDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("all");
 
 
   useFocusEffect(
@@ -150,6 +152,15 @@ export default function CustomerHome() {
     return localDate.toISOString().slice(0, 16);
   };
 
+  const formatStatus = (status?: string) => {
+    if (!status) return "";
+
+    return status
+      .replace("_", " ")
+      .replace(/\b\w/g, (l) => l.toUpperCase());
+  };
+
+
   return (
     <ScrollView style={commonStyles.container}>
 
@@ -161,57 +172,112 @@ export default function CustomerHome() {
         </Button>
       </View>
 
-      {requests.map((item) => (
-        <Card key={item._id} style={commonStyles.card}>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 15 }}>
 
-          <Card.Content>
+        <Chip
+          selected={statusFilter === "all"}
+          onPress={() => setStatusFilter("all")}
+          style={{ marginRight: 5, marginBottom: 5 }}
+        >
+          All
+        </Chip>
 
-            <View style={commonStyles.rowTop}>
-              <Text style={commonStyles.requestTitle}>
-                {item.title}
+        <Chip
+          selected={statusFilter === "pending"}
+          onPress={() => setStatusFilter("pending")}
+          style={{ marginRight: 5, marginBottom: 5 }}
+        >
+          Pending
+        </Chip>
+
+        <Chip
+          selected={statusFilter === "assigned"}
+          onPress={() => setStatusFilter("assigned")}
+          style={{ marginRight: 5, marginBottom: 5 }}
+        >
+          Assigned
+        </Chip>
+
+        <Chip
+          selected={statusFilter === "in_progress"}
+          onPress={() => setStatusFilter("in_progress")}
+          style={{ marginRight: 5, marginBottom: 5 }}
+        >
+          In Progress
+        </Chip>
+        <Chip
+          selected={statusFilter === "cancelled"}
+          onPress={() => setStatusFilter("cancelled")}
+          style={{ marginRight: 5, marginBottom: 5 }}
+        >
+          Cancelled
+        </Chip>
+        <Chip
+          selected={statusFilter === "completed"}
+          onPress={() => setStatusFilter("completed")}
+          style={{ marginRight: 5, marginBottom: 5 }}
+        >
+          Completed
+        </Chip>
+
+      </View>
+      {requests
+        .filter((item) =>
+          statusFilter === "all" ? true : item.status === statusFilter
+        )
+        .map((item) => (
+          <Card key={item._id} style={commonStyles.card}>
+
+            <Card.Content>
+
+              <View style={commonStyles.rowTop}>
+                <Text style={commonStyles.requestTitle}>
+                  {item.title}
+                </Text>
+
+                <Chip
+                  style={[
+                    commonStyles.statusChip,
+                    { backgroundColor: getStatusColor(item.status) }
+                  ]}
+                  textStyle={{ color: "white" }}
+                >
+                  {item.status}
+                </Chip>
+              </View>
+
+              <Text style={commonStyles.info}>
+                🔧 Service: {item.serviceId?.name}
               </Text>
 
-              <Chip
-                style={[
-                  commonStyles.statusChip,
-                  { backgroundColor: getStatusColor(item.status) }
-                ]}
-                textStyle={{ color: "white" }}
-              >
-                {item.status}
-              </Chip>
-            </View>
+              <Text style={commonStyles.info}>
+                📍 Address: {item.address}
+              </Text>
 
-            <Text style={commonStyles.info}>
-              🔧 Service: {item.serviceId?.name}
-            </Text>
+              <Text style={commonStyles.info}>
+                📅 Schedule: {formatDate(item.scheduleDate)}
+              </Text>
 
-            <Text style={commonStyles.info}>
-              📍 Address: {item.address}
-            </Text>
+              <Text style={commonStyles.info}>
+                👨‍🔧 Repairman: {item.repairmanId?.name || "Waiting assignment"}
+              </Text>
+              <Text style={commonStyles.info}>
+                💵 Price: {item.serviceId?.price || ""}
+              </Text>
+              {item.status === "pending" && (
+                <Button
+                  mode="contained"
+                  style={{ marginTop: 10 }}
+                  onPress={() => openEditModal(item)}
+                >
+                  Edit Request
+                </Button>
+              )}
 
-            <Text style={commonStyles.info}>
-              📅 Schedule: {formatDate(item.scheduleDate)}
-            </Text>
+            </Card.Content>
 
-            <Text style={commonStyles.info}>
-              👨‍🔧 Repairman: {item.repairmanId?.name || "Waiting assignment"}
-            </Text>
-
-            {item.status === "pending" && (
-              <Button
-                mode="contained"
-                style={{ marginTop: 10 }}
-                onPress={() => openEditModal(item)}
-              >
-                Edit Request
-              </Button>
-            )}
-
-          </Card.Content>
-
-        </Card>
-      ))}
+          </Card>
+        ))}
 
       {/* MODAL EDIT */}
 
