@@ -32,7 +32,7 @@ export default function Login() {
       const User = res.data.user;
 
       await AsyncStorage.setItem("User", JSON.stringify(User));
-      await AsyncStorage.setItem("token", token); 
+      await AsyncStorage.setItem("token", token);
 
       console.log(await AsyncStorage.getItem("User"));
 
@@ -58,6 +58,7 @@ export default function Login() {
       setLoading(false);
     }
   };
+
 
   return (
     <View style={commonStyles.container}>
@@ -91,6 +92,15 @@ export default function Login() {
               {error}
             </Text>
           ) : null}
+
+          {/* Password reset */}
+          <Button
+            mode="text"
+            onPress={() => router.push("/auth/password-reset")}
+            style={{ alignSelf: "flex-end" }}
+          >
+            Forgot password
+          </Button>
 
           <Button
             mode="contained"

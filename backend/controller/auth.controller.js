@@ -1,6 +1,7 @@
 const User = require("../models/User.model.js");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const sendNewPassword = require("../config/mailer");
 
 exports.register = async (req, res) => {
 
@@ -64,4 +65,37 @@ exports.login = async (req, res) => {
   } catch (error) {
     res.status(500).json(error);
   }
+};
+function generatePassword() {
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+  let pass = "";
+
+  for (let i = 0; i < 8; i++) {
+    pass += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+
+  return pass;
+}
+
+exports.forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    return res.status(404).json({ message: "Email not found" });
+  }
+
+  const newPassword = generatePassword();
+
+  const hashed = await bcrypt.hash(newPassword, 10);
+
+  user.password = hashed;
+  await user.save();
+
+  await sendNewPassword(email, newPassword);
+
+  res.json({ message: "New password sent to email" });
 };
