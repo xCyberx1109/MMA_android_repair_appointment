@@ -115,7 +115,7 @@ export default function UserList() {
 
     try {
 
-      await axios.put(
+      await axios.patch(
         `${API_URL}/${selectedUser._id}`,
         { role }
       );

@@ -1,7 +1,6 @@
 import { ScrollView, StyleSheet, View, Alert, Platform } from "react-native";
 import { Card, Text, Button, Chip } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { commonStyles } from "../../../../styles/commonStyle";
@@ -24,7 +23,6 @@ type Request = {
 
 export default function RepairmanHome() {
 
-  const router = useRouter();
   const [requests, setRequests] = useState<Request[]>([]);
 
   useEffect(() => {
@@ -52,11 +50,6 @@ export default function RepairmanHome() {
     }
   };
 
-  const handleLogout = async () => {
-    await AsyncStorage.removeItem("token");
-    await AsyncStorage.removeItem("role");
-    router.replace("/auth/login");
-  };
 
   const formatDate = (date?: string) => {
     if (!date) return "Not scheduled";
@@ -135,9 +128,7 @@ export default function RepairmanHome() {
       <View style={commonStyles.header}>
         <Text style={commonStyles.title}>My Jobs 🔧</Text>
 
-        <Button mode="outlined" onPress={handleLogout}>
-          Logout
-        </Button>
+      
       </View>
 
       {requests.map((item) => (

@@ -11,9 +11,17 @@ export default function Home() {
 
   useEffect(() => {
     const loadRole = async () => {
-      const r = await AsyncStorage.getItem("role");
-      setRole(r);
+
+      const userData = await AsyncStorage.getItem("User");
+
+      if (!userData) return;
+
+      const user = JSON.parse(userData);
+
+      setRole(user.role);
+
     };
+
     loadRole();
   }, []);
 

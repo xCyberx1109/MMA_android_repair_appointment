@@ -1,7 +1,6 @@
 import { ScrollView, StyleSheet, View, Modal, TextInput, Platform } from "react-native";
 import { Card, Text, Button, Chip } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
 import axios from "axios";
@@ -28,7 +27,6 @@ type Request = {
 
 export default function CustomerHome() {
 
-  const router = useRouter();
 
   const [requests, setRequests] = useState<Request[]>([]);
 
@@ -67,11 +65,6 @@ export default function CustomerHome() {
     }
   };
 
-  const handleLogout = async () => {
-    await AsyncStorage.removeItem("token");
-    await AsyncStorage.removeItem("role");
-    router.replace("/auth/login");
-  };
 
   const openEditModal = (request: Request) => {
 
@@ -167,9 +160,6 @@ export default function CustomerHome() {
       <View style={commonStyles.header}>
         <Text style={commonStyles.title}>My Requests</Text>
 
-        <Button mode="outlined" onPress={handleLogout}>
-          Logout
-        </Button>
       </View>
 
       <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 15 }}>

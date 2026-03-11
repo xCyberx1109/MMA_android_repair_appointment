@@ -1,7 +1,6 @@
 import { ScrollView, View } from "react-native";
 import { Card, Text, Button, Chip, Modal, Portal } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Ionicons } from "@expo/vector-icons";
@@ -35,8 +34,6 @@ type DashboardResponse = {
 };
 
 export default function AdminHome() {
-
-  const router = useRouter();
 
   const [pending, setPending] = useState<Request[]>([]);
   const [assigned, setAssigned] = useState<Request[]>([]);
@@ -78,11 +75,6 @@ export default function AdminHome() {
     }
   };
 
-  const handleLogout = async () => {
-    await AsyncStorage.removeItem("token");
-    await AsyncStorage.removeItem("role");
-    router.replace("/auth/login");
-  };
 
   const formatStatus = (status?: string) => {
     if (!status) return "";
@@ -247,9 +239,7 @@ export default function AdminHome() {
       <View style={commonStyles.header}>
         <Text style={commonStyles.title}>Admin Dashboard</Text>
 
-        <Button mode="outlined" onPress={handleLogout}>
-          Logout
-        </Button>
+  
       </View>
 
       {/* STATS */}

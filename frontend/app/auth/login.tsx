@@ -29,17 +29,17 @@ export default function Login() {
       });
 
       const token = res.data.token;
-      const role = res.data.user.role;
-      const UserId = res.data.user._id;
+      const User = res.data.user;
 
-      await AsyncStorage.setItem("UserId", UserId);
-      await AsyncStorage.setItem("token", token);
-      await AsyncStorage.setItem("role", role);
+      await AsyncStorage.setItem("User", JSON.stringify(User));
+      await AsyncStorage.setItem("token", token); 
 
-      if (role === "admin") {
+      console.log(await AsyncStorage.getItem("User"));
+
+      if (User.role === "admin") {
         router.replace("/home/admin");
       }
-      else if (role === "repairman") {
+      else if (User.role === "repairman") {
         router.replace("/home/repairman");
       }
       else {
