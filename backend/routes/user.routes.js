@@ -10,4 +10,7 @@ router.patch("/:id", userController.updateUser);
 
 router.patch("/:id/toggle-active", userController.toggleActive);
 
+router.patch("/:id/change-password", userController.changePassword);
+
+
 module.exports = router;

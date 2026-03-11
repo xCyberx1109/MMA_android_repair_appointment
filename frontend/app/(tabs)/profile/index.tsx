@@ -115,6 +115,12 @@ export default function ProfileScreen() {
       setNewPassword("");
       setConfirmPassword("");
 
+      await AsyncStorage.removeItem("token");
+      await AsyncStorage.removeItem("User");
+
+      router.replace("/auth/login");
+
+
     } catch (err) {
       console.log(err);
       alert("Change password failed");
