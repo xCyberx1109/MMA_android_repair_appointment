@@ -36,7 +36,7 @@ export default function TabLayout() {
     return (
         <Tabs
             screenOptions={{
-                tabBarActiveTintColor: "#007AFF",
+                tabBarActiveTintColor: "#6750A4",
                 tabBarInactiveTintColor: "gray",
             }}
         >
@@ -76,14 +76,12 @@ export default function TabLayout() {
                 name="request/create"
                 options={{
                     title: "Create Request",
-                    tabBarIcon: ({ color, size, focused }) => (
+                    tabBarIcon: ({ color, size }) => (
                         <MaterialIcons name="request-page" size={size} color={color} />
                     ),
                     ...(role !== "customer" && { href: null })
                 }}
             />
-
-
 
 
             {/* Profile */}
