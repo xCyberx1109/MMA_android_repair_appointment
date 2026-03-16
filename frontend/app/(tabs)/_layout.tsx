@@ -38,6 +38,8 @@ export default function TabLayout() {
             screenOptions={{
                 tabBarActiveTintColor: "#6750A4",
                 tabBarInactiveTintColor: "gray",
+                headerShown: false
+
             }}
         >
             {/* Home */}

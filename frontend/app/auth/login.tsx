@@ -48,9 +48,13 @@ export default function Login() {
 
     } catch (err) {
 
+      console.log("ERROR:", err);
+
       if (axios.isAxiosError(err)) {
+        console.log("AXIOS ERROR:", err.response?.data);
         setError(err.response?.data?.message || "Login failed");
       } else {
+        console.log("UNKNOWN ERROR:", err);
         setError("Something went wrong");
       }
 

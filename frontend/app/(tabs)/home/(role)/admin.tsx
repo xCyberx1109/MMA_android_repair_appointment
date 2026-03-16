@@ -47,7 +47,6 @@ export default function AdminHome() {
   const [visible, setVisible] = useState(false);
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
-  console.log("env api ", API_URL);
   useEffect(() => {
     fetchDashboard();
   }, []);

@@ -1,13 +1,18 @@
 import { Stack } from "expo-router";
 import { Provider as PaperProvider, MD3LightTheme } from "react-native-paper";
 import { Provider } from "react-redux";
-import { store } from "../stores/store";   // đường dẫn tới store của bạn
+import { store } from "../stores/store";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 export default function RootLayout() {
   return (
     <Provider store={store}>
       <PaperProvider theme={MD3LightTheme}>
-        <Stack screenOptions={{ headerShown: false }} />
+        <SafeAreaProvider>
+          <SafeAreaView style={{ flex: 1 }}>
+            <Stack screenOptions={{ headerShown: false }} />
+          </SafeAreaView>
+        </SafeAreaProvider>
       </PaperProvider>
     </Provider>
   );
