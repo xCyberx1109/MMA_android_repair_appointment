@@ -27,7 +27,7 @@ export default function ProfileScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
 
-  const API_URL = "http://localhost:5000/api/users";
+  const API_URL = `${process.env.EXPO_PUBLIC_API_URL}/api/users`;
 
   // Load user from AsyncStorage
   const loadUser = async () => {

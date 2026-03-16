@@ -15,7 +15,7 @@ type Service = {
 
 export default function ServiceScreen() {
 
-    const API = "http://localhost:5000/api/services";
+    const API = `${process.env.EXPO_PUBLIC_API_URL}/api/services`;
 
     const [services, setServices] = useState<Service[]>([]);
 
@@ -238,7 +238,7 @@ export default function ServiceScreen() {
                                     toggleService(service._id, service.is_active)
                                 }
                             >
-                                {service.is_active ? "Disable" : "Enable"} 
+                                {service.is_active ? "Disable" : "Enable"}
                             </Button>
 
                         </View>

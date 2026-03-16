@@ -19,7 +19,7 @@ interface Service {
 
 export default function CreateRequest() {
 
-    const API = "http://localhost:5000";
+    const API = process.env.EXPO_PUBLIC_API_URL;
 
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");

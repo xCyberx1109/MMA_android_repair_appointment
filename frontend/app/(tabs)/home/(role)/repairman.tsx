@@ -24,6 +24,7 @@ type Request = {
 export default function RepairmanHome() {
 
   const [requests, setRequests] = useState<Request[]>([]);
+  const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
   useEffect(() => {
     fetchMyJobs();
@@ -35,7 +36,7 @@ export default function RepairmanHome() {
       const token = await AsyncStorage.getItem("token");
 
       const res = await axios.get(
-        "http://localhost:5000/api/requests/repairman/my",
+        `${API_URL}/api/requests/repairman/my`,
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -78,7 +79,7 @@ export default function RepairmanHome() {
       const token = await AsyncStorage.getItem("token");
 
       await axios.put(
-        `http://localhost:5000/api/requests/${id}/status`,
+        `${API_URL}/api/requests/${id}/status`,
         { status },
         {
           headers: {
@@ -128,7 +129,7 @@ export default function RepairmanHome() {
       <View style={commonStyles.header}>
         <Text style={commonStyles.title}>My Jobs 🔧</Text>
 
-      
+
       </View>
 
       {requests.map((item) => (

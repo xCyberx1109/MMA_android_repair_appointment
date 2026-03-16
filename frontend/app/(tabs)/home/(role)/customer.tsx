@@ -38,6 +38,7 @@ export default function CustomerHome() {
   const [editScheduleDate, setEditScheduleDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
+  const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 
   useFocusEffect(
@@ -52,7 +53,7 @@ export default function CustomerHome() {
       const token = await AsyncStorage.getItem("token");
 
       const res = await axios.get(
-        "http://localhost:5000/api/requests/customer/my",
+        `${API_URL}/api/requests/customer/my`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -99,7 +100,7 @@ export default function CustomerHome() {
       const token = await AsyncStorage.getItem("token");
 
       await axios.put(
-        `http://localhost:5000/api/requests/${selectedRequest?._id}`,
+        `${API_URL}/api/requests/${selectedRequest?._id}`,
         {
           title: editTitle,
           address: editAddress,

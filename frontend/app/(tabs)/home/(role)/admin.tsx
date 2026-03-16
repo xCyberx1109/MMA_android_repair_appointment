@@ -45,7 +45,9 @@ export default function AdminHome() {
 
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
   const [visible, setVisible] = useState(false);
+  const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
+  console.log("env api ", API_URL);
   useEffect(() => {
     fetchDashboard();
   }, []);
@@ -56,7 +58,7 @@ export default function AdminHome() {
       const token = await AsyncStorage.getItem("token");
 
       const res = await axios.get<DashboardResponse>(
-        "http://localhost:5000/api/requests/dashboard",
+        `${API_URL}/api/requests/dashboard`,
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -99,7 +101,7 @@ export default function AdminHome() {
       const token = await AsyncStorage.getItem("token");
 
       const res = await axios.get(
-        "http://localhost:5000/api/requests/repairman/available",
+        `${API_URL}/api/requests/repairman/available`,
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -130,7 +132,7 @@ export default function AdminHome() {
       const repairmanId = available[0]._id;
 
       await axios.put(
-        `http://localhost:5000/api/requests/${requestId}/assign`,
+        `${API_URL}/api/requests/${requestId}/assign`,
         { repairmanId },
         {
           headers: {
@@ -154,7 +156,7 @@ export default function AdminHome() {
     const token = await AsyncStorage.getItem("token");
 
     await axios.put(
-      `http://localhost:5000/api/requests/${id}/status`,
+      `${API_URL}/api/requests/${id}/status`,
       { status },
       {
         headers: {
@@ -239,7 +241,7 @@ export default function AdminHome() {
       <View style={commonStyles.header}>
         <Text style={commonStyles.title}>Admin Dashboard</Text>
 
-  
+
       </View>
 
       {/* STATS */}
