@@ -279,28 +279,48 @@ exports.updateRequestStatus = async (req, res) => {
 exports.updateRequest = async (req, res) => {
     try {
 
-        const { title, address } = req.body;
+        const {
+            title,
+            description,
+            address,
+            scheduleDate,
+            serviceId
+        } = req.body;
 
         const request = await Request.findById(req.params.id);
 
         if (!request) {
-            return res.status(404).json({ message: "Request not found" });
+            return res.status(404).json({
+                message: "Request not found"
+            });
         }
 
+        // chỉ cho sửa khi pending
         if (request.status !== "pending") {
             return res.status(400).json({
                 message: "Only pending request can be edited"
             });
         }
 
-        request.title = title || request.title;
-        request.address = address || request.address;
+        // update fields
+        request.title = title ?? request.title;
+        request.description = description ?? request.description;
+        request.address = address ?? request.address;
+        request.scheduleDate = scheduleDate ?? request.scheduleDate;
+        request.serviceId = serviceId ?? request.serviceId;
 
         await request.save();
 
-        res.json(request);
+        res.json({
+            message: "Update request successfully",
+            data: request
+        });
 
     } catch (err) {
-        res.status(500).json(err);
+        res.status(500).json({
+            message: "Server error",
+            error: err.message
+        });
     }
 };
+
